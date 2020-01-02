@@ -23,7 +23,14 @@ public class SampleMqttClient {
     private final MqttClientPersistence persistence;
     private final MqttAsyncClient client;
 
-
+    public SampleMqttClient(){
+        super();
+        deviceName="";
+        deviceToken="";
+        clientId=null;
+        persistence=null;
+        client=null;
+    }
 
     public SampleMqttClient(String uri, String deviceName, String deviceToken) throws Exception {
         this.clientId = MqttAsyncClient.generateClientId();

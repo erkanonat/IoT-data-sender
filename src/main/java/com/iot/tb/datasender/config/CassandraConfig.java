@@ -12,7 +12,7 @@ import org.springframework.data.cassandra.mapping.CassandraMappingContext;
 import org.springframework.data.cassandra.repository.config.EnableCassandraRepositories;
 
 @Configuration
-@PropertySource(value = {"classpath:iot-springboot.properties"})
+@PropertySource(value = {"classpath:application.properties"})
 @EnableCassandraRepositories(basePackages = {"com.iot.tb.datasender.repository"})
 public class CassandraConfig extends AbstractCassandraConfiguration{
 
