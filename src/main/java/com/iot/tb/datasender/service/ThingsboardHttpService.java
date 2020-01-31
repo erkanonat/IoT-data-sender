@@ -123,6 +123,36 @@ public class ThingsboardHttpService {
         }
     }
 
+    public String postTelemetry(ObjectNode data ,String deviceId ) {
+
+        try {
+
+            HttpHeaders requestHeaders = getHttpHeaders();
+            if (requestHeaders == null) {
+                logger.warn("auth header couldn't found...");
+            }
+
+            String POST_TELEMETRY_URL = "/api/plugins/telemetry/DEVICE/${DEVICE_ID}/timeseries/SERVER_SCOPE";
+
+            String uriPostTelemetry = (EGYS_REST_ENDPOINT + POST_TELEMETRY_URL ).replace("${DEVICE_ID}", deviceId);
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode node = mapper.convertValue(data, JsonNode.class);
+            HttpEntity<JsonNode> httpEntity = new HttpEntity<JsonNode>(node, requestHeaders);
+
+            ResponseEntity responseEntity = restTemplate.postForEntity(uriPostTelemetry, httpEntity, ResponseEntity.class);
+
+            return responseEntity.getStatusCode().toString();
+        } catch (HttpClientErrorException ex) {
+            logger.error(ex.getMessage());
+            return null;
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+            return null;
+        }
+
+    }
+
     public String postAttributes(ObjectNode data, String deviceId) throws Exception {
         try {
             HttpHeaders requestHeaders = getHttpHeaders();

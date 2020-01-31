@@ -116,7 +116,8 @@ public class TrafficDataService {
 
             // send for each PTS
             for(Map.Entry<Integer,TbDeviceNode> pts : ptsMap.entrySet()){
-                tbHttpService.postAttributes(attributeMap.get("PTS_"+pts.getKey()),pts.getValue().getDeviceId().substring(1,37));
+//                tbHttpService.postAttributes(attributeMap.get("PTS_"+pts.getKey()),pts.getValue().getDeviceId().substring(1,37));
+                tbHttpService.postTelemetry(attributeMap.get("PTS_"+pts.getKey()),pts.getValue().getDeviceId().substring(1,37));
                 Thread.sleep(1500);
             }
 
