@@ -14,8 +14,8 @@ import java.util.Date;
 
 @Table("window_traffic")
 public class WindowTrafficData implements Serializable{
-    @PrimaryKeyColumn(name = "routeid",ordinal = 0,type = PrimaryKeyType.PARTITIONED)
-    private String routeId;
+    @PrimaryKeyColumn(name = "ptsid",ordinal = 0,type = PrimaryKeyType.PARTITIONED)
+    private String ptsId;
     @PrimaryKeyColumn(name = "recordDate",ordinal = 1,type = PrimaryKeyType.CLUSTERED)
     private String recordDate;
     @PrimaryKeyColumn(name = "vehicletype",ordinal = 2,type = PrimaryKeyType.CLUSTERED)
@@ -26,11 +26,11 @@ public class WindowTrafficData implements Serializable{
     @Column(value = "timestamp")
     private Date timeStamp;
 
-    public String getRouteId() {
-        return routeId;
+    public String getPtsId() {
+        return ptsId;
     }
-    public void setRouteId(String routeId) {
-        this.routeId = routeId;
+    public void setPtsId(String ptsId) {
+        this.ptsId = ptsId;
     }
     public String getRecordDate() {
         return recordDate;
@@ -58,7 +58,7 @@ public class WindowTrafficData implements Serializable{
     }
     @Override
     public String toString() {
-        return "TrafficData [routeId=" + routeId + ", vehicleType=" + vehicleType + ", totalCount=" + totalCount
+        return "TrafficData [ptsId=" + ptsId + ", vehicleType=" + vehicleType + ", totalCount=" + totalCount
                 + ", timeStamp=" + timeStamp + "]";
     }
 

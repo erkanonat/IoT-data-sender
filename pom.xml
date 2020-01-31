@@ -68,6 +68,17 @@
             <version>1.2.2</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.9</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.havelsan</groupId>
+            <artifactId>thingsboard-java-client</artifactId>
+            <version>1.0.3</version>
+        </dependency>
 
     </dependencies>
 
@@ -102,6 +113,12 @@
         </plugins>
     </build>
 
-
+<repositories>
+    <repository>
+        <id>thingsboard-java-client</id>
+        <name>thingsboard-java-client</name>
+        <url>http://10.151.255.87:8081/repository/maven-releases</url>
+    </repository>
+</repositories>
 
 </project>
