@@ -5,4 +5,4 @@ reads spark-processor results from cassandra
   
   
 
-![Alt text](/relative/path/to/img.jpg?raw=true "final dashboard")
+![Alt text](/src/main/resources/dashboard2.png?raw=true "final dashboard")
