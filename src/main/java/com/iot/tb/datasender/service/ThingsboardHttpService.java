@@ -3,7 +3,12 @@ package com.iot.tb.datasender.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.JsonObject;
+import com.havelsan.thingsboardclient.client.ApiException;
+import com.havelsan.thingsboardclient.model.Alarm;
 import com.havelsan.thingsboardclient.model.Device;
+import com.havelsan.thingsboardclient.model.EntityId;
+import com.iot.tb.datasender.entity.AlarmDto;
 import com.iot.tb.datasender.entity.TbDeviceNode;
 import org.apache.http.impl.client.HttpClients;
 import org.slf4j.LoggerFactory;
@@ -85,6 +90,33 @@ public class ThingsboardHttpService {
         HttpHeaders requestHeaders = new HttpHeaders();
         requestHeaders.add("X-Authorization", "Bearer " + token);
         return requestHeaders;
+    }
+
+    public Alarm sendAlarm(String deviceId, String description) throws ApiException {
+
+        JsonObject details = new JsonObject();
+        details.addProperty("description", description);
+        String alarm_detailStr = details.toString();
+
+        // create alarm
+        Alarm alarm =
+                Alarm.builder().severity(Alarm.SeverityEnum.MAJOR).status(Alarm.StatusEnum.ACTIVE_UNACK).details(
+                        alarm_detailStr)
+                        .propagate(true)
+                        .originator(EntityId.builder().entityType(EntityId.EntityTypeEnum.DEVICE).id(deviceId)
+                                .build()).type("pts-alarm").name("pts duplicate plate number alarm").build();
+
+        HttpHeaders requestHeaders = getHttpHeaders();
+        if (requestHeaders == null) {
+            logger.warn("auth header couldn't found...");
+
+        }
+
+        HttpEntity<Alarm> httpEntity = new HttpEntity<>(alarm, requestHeaders);
+        ResponseEntity<AlarmDto> responseEntity = restTemplate.postForEntity(EGYS_REST_ENDPOINT+"/api/alarm", httpEntity, AlarmDto.class);
+
+        return AlarmDto.valueOf(responseEntity.getBody());
+
     }
 
     public List<TbDeviceNode> getDevicesByType(String type) {
