@@ -3,34 +3,33 @@ package com.iot.tb.datasender.tbclient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.*;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Random;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
-
-@Component
+/**
+ *
+ */
+@Slf4j
 public class SampleMqttClient {
 
     public static final ObjectMapper MAPPER = new ObjectMapper();
 
+    @Getter
     private final String deviceToken;
+    @Getter
     private final String deviceName;
+    @Getter
     private final String clientId;
     private final MqttClientPersistence persistence;
     private final MqttAsyncClient client;
-
-    public SampleMqttClient(){
-        super();
-        deviceName="";
-        deviceToken="";
-        clientId=null;
-        persistence=null;
-        client=null;
-    }
 
     public SampleMqttClient(String uri, String deviceName, String deviceToken) throws Exception {
         this.clientId = MqttAsyncClient.generateClientId();
@@ -38,8 +37,8 @@ public class SampleMqttClient {
         this.deviceName = deviceName;
         this.persistence = new MemoryPersistence();
         this.client = new MqttAsyncClient(uri, clientId, persistence);
-    }
 
+    }
     public boolean connect() throws Exception {
         MqttConnectOptions options = new MqttConnectOptions();
         options.setUserName(deviceToken);
@@ -47,16 +46,16 @@ public class SampleMqttClient {
             client.connect(options, null, new IMqttActionListener() {
                 @Override
                 public void onSuccess(IMqttToken iMqttToken) {
-//                    log.info("[{}] connected to Thingsboard!", deviceName);
+                    log.info("[{}] connected to Thingsboard!", deviceName);
                 }
 
                 @Override
                 public void onFailure(IMqttToken iMqttToken, Throwable e) {
-//                    log.error("[{}] failed to connect to Thingsboard!", deviceName, e);
+                    log.error("[{}] failed to connect to Thingsboard!", deviceName, e);
                 }
             }).waitForCompletion();
         } catch (MqttException e) {
-//            log.error("Failed to connect to the server", e);
+            log.error("Failed to connect to the server", e);
         }
         return client.isConnected();
     }
@@ -78,12 +77,12 @@ public class SampleMqttClient {
         IMqttDeliveryToken deliveryToken = client.publish(topic, msg, null, new IMqttActionListener() {
             @Override
             public void onSuccess(IMqttToken asyncActionToken) {
-//                log.trace("Data updated!");
+                log.trace("Data updated!");
             }
 
             @Override
             public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-//                log.error("[{}] Data update failed!", deviceName, exception);
+                log.error("[{}] Data update failed!", deviceName, exception);
             }
         });
         if (sync) {
@@ -91,92 +90,111 @@ public class SampleMqttClient {
         }
     }
 
-    private static double randomWalk(double location) {
+    private static String generateRandomPlateNumber() {
 
-        double r = Math.random();
-        double range = 0.00030d;
+        Random rand = new Random();
 
-//        if(r<0.50){
-//            return location-range;
-//        }else {
-//            return location+range;
-//        }
-        return  location+range;
+        List<String> cities = new ArrayList<String>();
+
+        for(int i=1;i<=80;i++)
+            cities.add( (String.valueOf(i).length()<2) ? "0"+String.valueOf(i) : String.valueOf(i) );
+        String cityCode = cities.get(rand.nextInt(80));
+
+        List<String> strList = Arrays.asList(new String[]{"A","B","C","D","E","F","G","H","K","N"});
+
+        String strCode1 = strList.get(rand.nextInt(10));
+        String strCode2 = strList.get(rand.nextInt(10));
+
+        int numCode = rand.nextInt(999-100)+100;
+
+
+        return cityCode+"_"+strCode1+strCode2+"_"+String.valueOf(numCode);
     }
+    public static void main(String[] args) throws  IOException, Exception {
 
-    public static void scenario_1()  throws IOException, Exception {
-        SampleMqttClient client = new SampleMqttClient("tcp://127.0.0.1","PTS_1","lM8fc3ty9xIkwuiZsP1G");
+        List<String> routeList = Arrays.asList(new String[]{"PTS_1", "PTS_2", "PTS_3", "PTS_4", "PTS_5"});
+        List<String> colorList = Arrays.asList(new String[]{"white", "black", "red", "blue", "grey", "yellow"});
+        List<String> vehicleTypeList = Arrays.asList(new String[]{"Large Truck", "Small Truck", "Private Car", "Bus", "Taxi"});
 
-        client.connect();
-        System.out.println("connected");
-//        double lat = 39.907360;
-//        double lon = 32.753005;
-        double tempInit = 81.454545d;
+        Random rand = new Random();
 
-        for(int i =0;i< 1000 ; i++) {
+        SampleMqttClient client1 = new SampleMqttClient("tcp://0.0.0.0:1883", "PTS_1", "u770miwXk5WJA3zasFat");
+        SampleMqttClient client2 = new SampleMqttClient("tcp://0.0.0.0:1883", "PTS_2", "Mb9XuKtfeNMkJSMS1Y6u");
+        SampleMqttClient client3 = new SampleMqttClient("tcp://0.0.0.0:1883", "PTS_3", "vW0eLrTS7ia1UnL9B5bF");
+        SampleMqttClient client4 = new SampleMqttClient("tcp://0.0.0.0:1883", "PTS_4", "9y5Cp1LUQQFJyLrR24k7");
+        SampleMqttClient client5 = new SampleMqttClient("tcp://0.0.0.0:1883", "PTS_5", "UTWdMASNEbZIs3JY4DR8");
 
-            double temp  = Math.random();
+        Map<Integer, SampleMqttClient> clientMap = new HashMap<>();
+        clientMap.put(Integer.valueOf(client1.deviceName.split("_")[1]), client1);
+        clientMap.put(Integer.valueOf(client2.deviceName.split("_")[1]), client2);
+        clientMap.put(Integer.valueOf(client3.deviceName.split("_")[1]), client3);
+        clientMap.put(Integer.valueOf(client4.deviceName.split("_")[1]), client4);
+        clientMap.put(Integer.valueOf(client5.deviceName.split("_")[1]), client5);
+
+        client1.connect();
+        client2.connect();
+        client3.connect();
+        client4.connect();
+        client5.connect();
+
+        try {
+
             ObjectMapper mapper = new ObjectMapper();
-            ObjectNode nodeTelemetry = mapper.createObjectNode();
-            ObjectNode nodeAttribute = mapper.createObjectNode();
 
-            Random rand = new Random();
-            int LargeTruckCount = rand.nextInt(120 - 80) + 80;// random speed between 80 to 120
-            int SmallTruckCount = rand.nextInt(60 - 40) + 40;// random speed between 80 to 120
-            int TaxiCount = rand.nextInt(200 - 150) + 150;// random speed between 80 to 120
-            int PrivateCar = rand.nextInt(90 - 60) + 60;// random speed between 80 to 120
+            List<ObjectNode> iotEvents = new ArrayList<>();
 
-            nodeTelemetry.put("averageSpeed", String.valueOf( (temp<0.5) ? tempInit+temp : tempInit-temp  ));
-            nodeTelemetry.put("LargeTruckCount", LargeTruckCount);
-            nodeTelemetry.put("SmallTruckCount", SmallTruckCount);
-            nodeTelemetry.put("TaxiCount", TaxiCount);
-            nodeTelemetry.put("PrivateCar", PrivateCar);
-//
-//            nodeTelemetry.put("lat", lat);
-//            lon = randomWalk(lon);
-//            nodeTelemetry .put("lon", lon);
+            for(int j=0;j<1000;j++) {
 
-            System.out.println("publish message : " + nodeTelemetry.toString());
-            client.publishTelemetry(nodeTelemetry);
+                ObjectNode iotData =  mapper.createObjectNode();
 
+                String ptsId = routeList.get(rand.nextInt(5));
+                String vehicleType = vehicleTypeList.get(rand.nextInt(5));
+                String plateNumber = generateRandomPlateNumber();
+                String color = colorList.get(rand.nextInt(6));
+                Date now = new Date();
+                String pattern = "yyyy-MM-dd HH:mm:ss";
+                DateFormat df = new SimpleDateFormat(pattern);
+                String timeStampAsFormat = df.format(now);
 
-            Thread.sleep(3000);
+                double speed = rand.nextInt(120 - 50) + 50;// random speed between 50 to 120
+
+                iotData.put("ptsId", ptsId);
+                iotData.put("plateNumber", plateNumber);
+                iotData.put("color", color);
+                iotData.put("speed", speed);
+                iotData.put("vehicleType", vehicleType);
+                iotData.put("timestamp", timeStampAsFormat);
+
+                iotEvents.add(iotData);
+
+            }
+
+            Collections.shuffle(iotEvents);
+
+            for(ObjectNode node : iotEvents){
+
+                Integer ptsNo = Integer.valueOf(node.get("ptsId").toString().split("_")[1].substring(0,1));
+
+                SampleMqttClient client = clientMap.get(ptsNo);
+
+                if(client!=null){
+                    System.out.println(node.toString());
+                    client.publishTelemetry(node);
+                }
+
+                Thread.sleep(2000);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            client1.disconnect();
+            client2.disconnect();
+            client3.disconnect();
+            client4.disconnect();
+            client5.disconnect();
         }
 
-        client.disconnect();
-
     }
 
-//    public static void main(String[] args) throws  IOException, Exception {
-//
-//        scenario_1();
-//    }
-
-
-
-    /* getter setter*/
-
-    public static ObjectMapper getMAPPER() {
-        return MAPPER;
-    }
-
-    public String getDeviceToken() {
-        return deviceToken;
-    }
-
-    public String getDeviceName() {
-        return deviceName;
-    }
-
-    public String getClientId() {
-        return clientId;
-    }
-
-    public MqttClientPersistence getPersistence() {
-        return persistence;
-    }
-
-    public MqttAsyncClient getClient() {
-        return client;
-    }
 }

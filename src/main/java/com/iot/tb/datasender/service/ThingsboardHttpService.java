@@ -8,15 +8,11 @@ import com.havelsan.thingsboardclient.client.ApiException;
 import com.havelsan.thingsboardclient.model.Alarm;
 import com.havelsan.thingsboardclient.model.Device;
 import com.havelsan.thingsboardclient.model.EntityId;
-import com.iot.tb.datasender.entity.AlarmDto;
 import com.iot.tb.datasender.entity.TbDeviceNode;
 import org.apache.http.impl.client.HttpClients;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
@@ -100,22 +96,40 @@ public class ThingsboardHttpService {
 
         // create alarm
         Alarm alarm =
-                Alarm.builder().severity(Alarm.SeverityEnum.MAJOR).status(Alarm.StatusEnum.ACTIVE_UNACK).details(
-                        alarm_detailStr)
+                Alarm.builder()
+                        .severity(Alarm.SeverityEnum.MAJOR)
+                        .status(Alarm.StatusEnum.ACTIVE_UNACK)
+                        .details(null)
                         .propagate(true)
-                        .originator(EntityId.builder().entityType(EntityId.EntityTypeEnum.DEVICE).id(deviceId)
-                                .build()).type("pts-alarm").name("pts duplicate plate number alarm").build();
+                        .originator(EntityId.builder().entityType(EntityId.EntityTypeEnum.DEVICE).id("5d4e8070-434d-11ea-996a-e5533de8be4b").build())
+                        .type("pts-alarm")
+                        .name("pts-alarm").build();
 
-        HttpHeaders requestHeaders = getHttpHeaders();
-        if (requestHeaders == null) {
-            logger.warn("auth header couldn't found...");
+        try {
+            HttpHeaders requestHeaders = getHttpHeaders();
+            if (requestHeaders == null) {
+                logger.warn("auth header couldn't found...");
+                throw new Exception("not connected to egys....authentication failed.......");
+            }
+            HttpEntity<Alarm> httpEntity = new HttpEntity<>(alarm, requestHeaders);
 
+            ResponseEntity<Alarm> responseEntity =
+                    restTemplate.postForEntity(EGYS_REST_ENDPOINT + "/api/alarm",
+                            httpEntity,
+                            Alarm.class);
+
+            if (!responseEntity.getStatusCode().equals(HttpStatus.OK)) {
+                logger.error("alarm couldn't created/updated");
+                return null;
+            }
+            logger.info("alarm successfully created: " + alarm.getType()  );
+            return responseEntity.getBody();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            logger.error("create alarm exception: {} " + e.getMessage());
         }
-
-        HttpEntity<Alarm> httpEntity = new HttpEntity<>(alarm, requestHeaders);
-        ResponseEntity<AlarmDto> responseEntity = restTemplate.postForEntity(EGYS_REST_ENDPOINT+"/api/alarm", httpEntity, AlarmDto.class);
-
-        return AlarmDto.valueOf(responseEntity.getBody());
+        return null;
 
     }
 

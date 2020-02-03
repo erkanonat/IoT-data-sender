@@ -2,9 +2,11 @@ package com.iot.tb.datasender.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.iot.tb.datasender.entity.AnomallyTrafficData;
 import com.iot.tb.datasender.entity.TbDeviceNode;
 import com.iot.tb.datasender.entity.TotalTrafficData;
 import com.iot.tb.datasender.entity.WindowTrafficData;
+import com.iot.tb.datasender.repository.AnomallyTrafficDataRepository;
 import com.iot.tb.datasender.repository.TotalTrafficDataRepository;
 import com.iot.tb.datasender.repository.WindowTrafficDataRepository;
 import org.apache.log4j.Logger;
@@ -29,9 +31,11 @@ public class TrafficDataService {
     private WindowTrafficDataRepository windowTrafficRepository;
 
     @Autowired
+    private AnomallyTrafficDataRepository anomallyTrafficDataRepository;
+
+    @Autowired
     ThingsboardHttpService tbHttpService ;
 
-//    HashMap<String,SampleMqttClient> clients = new HashMap<>();
     Map<Integer, TbDeviceNode> ptsMap = new HashMap<>();
 
     private static DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -90,10 +94,23 @@ public class TrafficDataService {
             // send totalTrafficData
             List<TotalTrafficData> totalTrafficList = new ArrayList<TotalTrafficData>();
             List<WindowTrafficData> windowTrafficList = new ArrayList<WindowTrafficData>();
+            List<AnomallyTrafficData> anomallyTrafficList = new ArrayList<>();
 
             HashMap<String, ObjectNode> attributeMap = new HashMap<>();
             totalTrafficRepository.findTrafficDataByDate(sdf.format(new Date())).forEach(e -> totalTrafficList.add(e));
             windowTrafficRepository.findTrafficDataByDate(sdf.format(new Date())).forEach(e -> windowTrafficList.add(e));
+            anomallyTrafficDataRepository.findAnomalyByDate(sdf.format(new Date())).forEach(e -> anomallyTrafficList.add(e));
+
+            System.out.println("send anomally control");
+            for(AnomallyTrafficData anomallyData : anomallyTrafficList) {
+                String duplicates = anomallyData.getDuplicates();
+                String[] ptsArray = duplicates.split(",");
+//                for(String pts : ptsArray){
+                    String alarmDeviceId = ptsMap.get(Integer.valueOf(ptsArray[0].split("_")[1])).getDeviceId();
+                    tbHttpService.sendAlarm(alarmDeviceId, anomallyData.getPlateNumber());
+//                }
+
+            }
 
             System.out.println("create attribute JSON nodes");
             for(TotalTrafficData t : totalTrafficList) {
@@ -118,7 +135,7 @@ public class TrafficDataService {
             for(Map.Entry<Integer,TbDeviceNode> pts : ptsMap.entrySet()){
 //                tbHttpService.postAttributes(attributeMap.get("PTS_"+pts.getKey()),pts.getValue().getDeviceId().substring(1,37));
                 tbHttpService.postTelemetry(attributeMap.get("PTS_"+pts.getKey()),pts.getValue().getDeviceId().substring(1,37));
-                Thread.sleep(1500);
+//                Thread.sleep(1500);
             }
 
 
