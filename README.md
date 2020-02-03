@@ -5,7 +5,9 @@ reads spark-processor results from cassandra db
   There are 4 tables in cassandra namely; total_traffic, window_traffic, anomally_traffic_data, average_speed_traffi tables. 
   these tables stores spark's final results which produced by analyzing iot events coming from kafka broker. 
 
+
 cassandra iot-traffic-key-space tables:
+
 ![Alt text](/src/main/resources/traffic_key_space_tables.png?raw=true "final dashboard")  
   
 
